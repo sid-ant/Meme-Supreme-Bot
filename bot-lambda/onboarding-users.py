@@ -55,7 +55,8 @@ def process(request):
             result_msg = globals()[method_name](chat_id,user_id,username)
         
         send_reply(chat_id,result_msg)
-        send_memes(chat_id)
+        if result_msg == reply.registered:
+            send_memes(chat_id)
         
     except:
         logger.error("exeception occured while trying to match message with function")
@@ -98,11 +99,6 @@ def perform_stop(chat_id,user_id,username):
 
     return reply.error_occured
 
-
-def send_memes(chat_id):
-    # get memes from the meme table 
-    # call send-memes  lambda 
-
 # decouple this and put it in seperate lambda? 
 def send_reply(chat_id,message):
     accesscode = os.environ['accesscode']
@@ -114,3 +110,20 @@ def send_reply(chat_id,message):
         logger.info(f"Successfully sent message! {message}")
     except RequestException as e:
         logger.error(f"Couldn't send reply {e}")
+
+
+def send_memes(chat_id):
+    memes = get_memes()
+    aws_lambda = boto3.client('lambda')
+    logger.info("Calling Send-Memes Lambda")
+    response = aws_lambda.invoke(
+        FunctionName="Send-Memes",
+        InvocationType='Event',
+        Payload=memes
+    )
+    logger.info(f"Send-Meme Lambda Added to Queue? Response: {response}")
+    return
+
+
+def get_memes():
+    pass
