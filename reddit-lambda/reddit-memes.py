@@ -2,7 +2,10 @@ import praw
 import os
 import logging
 import boto3 
-from requests_futures.sessions import FuturesSession
+import time
+from datetime import date
+from botocore.exceptions import ClientError
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -29,59 +32,40 @@ def get_reddit_memes():
     logger.info(f"The reddit is in {reddit.read_only}")
     memes=[]
     for submission in reddit.subreddit("memes").top('day',limit=10):
+        post = {}
         if submission.url.find("i.redd.it")!=-1:
-            memes.append(submission.url)
-    memes = memes[:6]
+            post['content_url']=submission.url
+            post['caption']=submission.title
+            post['url']=submission.permalink
+            post['author']=submission.author
+            memes.append(post)
     logger.info(f"Got memes from reddit {memes}")
     return memes    
 
 
 def store_memes(memes,category):
-    current_day = getday()
-    epoch = getepoch()
-
+    today = date.today()
+    current_day = today.strftime("%d/%m/%Y")
     for m in memes:
+        logger.info(f"storing meme : {m}")
+        epoch = int(round(time.time() * 1000))
         try:
             table_memes.put_item(
                 Item={
-                    'Meme_ID':{
-                        'S':current_day
-                    }, 
-                    {
-                        'Timestamp':{
-                            'N':epoch
-                        }
-                    },
-                    {
-                        'ContentUrl':{
-                            'S':m['content_url']
-                        }
-                    },
-                    {
-                        'Caption':{
-                            'S':m['caption']
-                        }
-                    },
-                    {
-                        'Url':{
-                            'S':m['url']
-                        }
-                    },
-                    {
-                        'Author':{
-                            'S':m['author']
-                        }
-                    },
-                    {
-                        'Category':{
-                            'S':category
-                        }
-                    }
+                    "Meme_ID":current_day, 
+                    "Creation_Time":epoch,
+                    "ContentUrl":m["content_url"],
+                    "Caption":m["caption"],
+                    "Url":m["url"],
+                    "Author":m["author"].name,
+                    "Category":category
                 },
-                ConditionalExpression='attribute_not_exists(Timestamp)'
+                ConditionExpression='attribute_not_exists(Creation_Time)'
             )
+        logger.info(f"successfully stored meme : {m}")
         except ClientError as e:
             logger.error(f"Error while inserting into table Memes {e.response['Error']['Message']}")
+    return
 
 # query database
 # def get_chats():
