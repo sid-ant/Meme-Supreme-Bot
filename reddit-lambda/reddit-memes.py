@@ -8,13 +8,12 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 db = boto3.resource('dynamodb')
-table = db.Table('Chats')
+table_memes = db.Table('Memes')
 
 def lambda_handler(event,context):
     try:
-        dank = get_dem_memes()
-        subsribers = get_chats()
-        boys_go_deliver(dank,subsribers)
+        memes = get_reddit_memes()
+        store_memes(memes,'default')
     except:
         logger.info("opps, something bad happened")
         raise
@@ -37,9 +36,52 @@ def get_reddit_memes():
     return memes    
 
 
-def store_memes():
-    #TODO
-    pass
+def store_memes(memes,category):
+    current_day = getday()
+    epoch = getepoch()
+
+    for m in memes:
+        try:
+            table_memes.put_item(
+                Item={
+                    'Meme_ID':{
+                        'S':current_day
+                    }, 
+                    {
+                        'Timestamp':{
+                            'N':epoch
+                        }
+                    },
+                    {
+                        'ContentUrl':{
+                            'S':m['content_url']
+                        }
+                    },
+                    {
+                        'Caption':{
+                            'S':m['caption']
+                        }
+                    },
+                    {
+                        'Url':{
+                            'S':m['url']
+                        }
+                    },
+                    {
+                        'Author':{
+                            'S':m['author']
+                        }
+                    },
+                    {
+                        'Category':{
+                            'S':category
+                        }
+                    }
+                },
+                ConditionalExpression='attribute_not_exists(Timestamp)'
+            )
+        except ClientError as e:
+            logger.error(f"Error while inserting into table Memes {e.response['Error']['Message']}")
 
 # query database
 # def get_chats():

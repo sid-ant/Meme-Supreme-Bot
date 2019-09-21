@@ -55,7 +55,8 @@ def process(request):
             result_msg = globals()[method_name](chat_id,user_id,username)
         
         send_reply(chat_id,result_msg)
-
+        send_memes(chat_id)
+        
     except:
         logger.error("exeception occured while trying to match message with function")
         raise
@@ -96,6 +97,11 @@ def perform_stop(chat_id,user_id,username):
         logger.error(e.response['Error']['Message'])
 
     return reply.error_occured
+
+
+def send_memes(chat_id):
+    # get memes from the meme table 
+    # call send-memes  lambda 
 
 # decouple this and put it in seperate lambda? 
 def send_reply(chat_id,message):
