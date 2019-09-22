@@ -3,7 +3,11 @@ import logging
 import boto3 
 import requests
 import os
+from datetime import date
 from botocore.exceptions import ClientError
+from requests import RequestException
+from boto3.dynamodb.conditions import Key, Attr
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -22,21 +26,21 @@ class ResponseMessages():
 reply = ResponseMessages()
 
 def lambda_handler(event, context):
+    get_memes()
+    # logger.info(f"Event {event}")
+    # logger.info(f"#Event Body {event['body']} ")
+    # body = event['body']
+    # body = json.loads(body)
     
-    logger.info(f"Event {event}")
-    logger.info(f"#Event Body {event['body']} ")
-    body = event['body']
-    body = json.loads(body)
+    # try:
+    #     process(body["message"])
+    # except:
+    #     logger.error("Exception when invoking process")
+    #     raise 
     
-    try:
-        process(body["message"])
-    except:
-        logger.error("Exception when invoking process")
-        raise 
-    
-    return {
-        'statusCode': 200
-    }
+    # return {
+    #     'statusCode': 200
+    # }
 
 def process(request): 
     try:
@@ -126,4 +130,10 @@ def send_memes(chat_id):
 
 
 def get_memes():
-    pass
+    today = date.today()
+    current_day = today.strftime("%d/%m/%Y")
+    memes_table = boto3.client('dynamodb')
+    results = memes_table.query(TableName="Memes",Select="ALL_ATTRIBUTES",ScanIndexForward=True,KeyConditionExpression=Key("Meme_ID").eq(current_day),Limit=5)
+    for r in results['Items']:
+        logger.info(f"Item fetched is {r}")
+    return 
