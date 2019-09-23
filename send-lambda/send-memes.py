@@ -14,8 +14,8 @@ def send_photo(chat_id,memes):
     for meme in memes:
         media = {
             "type":"photo",
-            "media":meme['url'],
-            "caption":meme['caption']
+            "media":meme['ContentUrl'],
+            "caption":meme['Caption']
         }
         InputMediaPhoto.append(media)
 
