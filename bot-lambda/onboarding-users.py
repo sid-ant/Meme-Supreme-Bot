@@ -16,10 +16,15 @@ dynamodb = boto3.resource('dynamodb')
 texts = ['/start','/stop']
 
 class ResponseMessages():
-    registered = "Succefully, registered. Your path to being a meme-lord has begun! Welcome"
-    already_re = "You are already registered"
+    registered = ( "You've been succefully, registered. \n"
+                   "Welcome to the path towards being a meme lord. \n"
+                   "You will now recieve 5 top-tier memes from `reddit.com` every 4 hours. \n"
+                   "To stop getting memes send `/stop` and to start again send `/start` \n"
+                   "Have fun. "
+    )
+    already_re = "You are already registered."
     error_re = "Sorry, we couldn't register you. Please try again later."
-    deregistered = "You have been successfully de-registered. Goodbye :("
+    deregistered = "You have been successfully de-registered, to start agains send `/start`. Goodbye :("
     error_occured  = "I don't feel so good! an error occured"
     default = "Hi! MemeSupreme is primarly a meme delievery bot and doesn't yet support conversations. Thanks!" 
 
