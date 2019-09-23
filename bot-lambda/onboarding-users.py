@@ -117,7 +117,7 @@ def send_reply(chat_id,message):
 
 def send_memes(chat_id):
     memes = get_memes()
-    logger.info("Succesfully Retrived memes")
+    logger.info(f"Succesfully Retrived memes as {memes}")
     data = {}
     data['chat_id']=chat_id
     data['memes']=memes
@@ -125,7 +125,7 @@ def send_memes(chat_id):
     aws_lambda = boto3.client('lambda')
     logger.info("Calling Send-Memes Lambda")
     response = aws_lambda.invoke(
-        FunctionName="Send-Memes",
+        FunctionName="sendMemes",
         InvocationType='Event',
         Payload=data
     )
@@ -136,7 +136,7 @@ def get_memes():
     today = date.today()
     current_day = today.strftime("%d/%m/%Y")
     memes_table = dynamodb.Table('Memes')
-    results = memes_table.query(Select="ALL_ATTRIBUTES",ScanIndexForward=True,KeyConditionExpression=Key("Meme_ID").eq(current_day),FilterExpression=Attr('Category').eq('default'),Limit=5)
+    results = memes_table.query(Select="SPECIFIC_ATTRIBUTES",ScanIndexForward=True,KeyConditionExpression=Key("Meme_ID").eq(current_day),FilterExpression=Attr('Category').eq('default'),ProjectionExpression="Author,ContentUrl,PostUrl,Caption,Category",Limit=5)
     memes = results['Items']
     if len(memes)==0:
         raise Exception('DB returned no results')
