@@ -7,6 +7,7 @@ from datetime import date
 from botocore.exceptions import ClientError
 from requests import RequestException
 from boto3.dynamodb.conditions import Key, Attr
+import datetime
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -72,13 +73,17 @@ def process(request):
 
 # if already exists skip and send different message else insert 
 def perform_start(chat_id,user_id,username):
-
+    now = datetime.datetime.now() 
+    now = now.strftime("%d-%b-%Y %H:%M:%S.%f")    
     chats = dynamodb.Table("Chats")
     try:
         chats.put_item(Item={
             'chatid':str(chat_id),
             'userid':str(user_id),
-            'username':str(username)
+            'username':str(username), 
+            'status':True,
+            'creation_time':now, 
+            'updation_time':now
         },
         ConditionExpression='attribute_not_exists(chatid)'
         )
@@ -86,26 +91,56 @@ def perform_start(chat_id,user_id,username):
         return reply.registered
     except ClientError as e:
         if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-            logger.info(f'already registered {e}')
-            return reply.already_re
+            logger.info(f'already in table {e}')
+            logger.info('checking if the user is disabled')
+            
+            logging.info('getting the chat id')
+            result = chats.get_item(Key={'chatid':str(chat_id)})
+            logging.info(f'response {result}')
+
+            if not result['item']['status']:
+                logging.info("calling change status to activate")
+                response = change_status(chat_id,True)
+                logging.info(f'change status response {response}')
+                if response: 
+                     return reply.registered
+                else:
+                     return reply.error_re 
+            else:
+                logger.info(f'already registered {e}')
+                return reply.already_re
         else:
             logger.error(f"Error while inserting into table Chats {e.response['Error']['Message']}")
     return reply.error_re
 
 
 def perform_stop(chat_id,user_id,username):
+    logging.info("calling change status to deactivate ")
+    response = change_status(chat_id,False)
+    logging.info(f'change status response {response}')
+    if response:
+        return reply.deregistered
+    else:
+        return reply.error_occured
+    
+def change_status(chat_id,status):
+    now = datetime.datetime.now() 
+    now = now.strftime("%d-%b-%Y %H:%M:%S.%f")    
     chats = dynamodb.Table("Chats")    
     try:
-        deleted = chats.delete_item(Key={
-            'chatid':str(chat_id)
-        },
-        ReturnValues='ALL_OLD')
-        logger.info(f"{deleted} deleted successfully")
-        return reply.deregistered
+        chats.update_item(
+            Key={
+            'chatid': str(chat_id)
+            },
+            UpdateExpression='SET status = :newstatus',
+            ExpressionAttributeValues={
+            ':newstatus': status
+            }
+        )
+        return True
     except ClientError as e:
         logger.error(e.response['Error']['Message'])
-
-    return reply.error_occured
+    return False     
 
 # decouple this and put it in seperate lambda? 
 def send_reply(chat_id,message):
