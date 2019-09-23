@@ -46,5 +46,19 @@ def get_memes():
 
 
 def lambda_handler(event, context):
-    #TODO
-    pass
+    logging.info("get users_memes started")
+    users = get_users()
+    memes = get_memes()
+    lambda_client = boto3.client('lambda')
+    for user in users:
+        logging.info(f'Sending memes to chat_id {user}')
+        data = {}
+        data['chat_id']=user
+        data['memes']=memes
+        data = json.dumps(data)
+        response = lambda_client.invoke(
+            FunctionName="sendMemes",
+            InvocationType='Event',
+            Payload=memes
+        )
+        logger.info(f"Invoked sendMemes Lambda with response f{response}")
