@@ -81,7 +81,7 @@ def perform_start(chat_id,user_id,username):
             'chatid':str(chat_id),
             'userid':str(user_id),
             'username':str(username), 
-            'status':True,
+            'user_status':True,
             'creation_time':now, 
             'updation_time':now
         },
@@ -98,7 +98,7 @@ def perform_start(chat_id,user_id,username):
             result = chats.get_item(Key={'chatid':str(chat_id)})
             logging.info(f'response {result}')
 
-            if not result['item']['status']:
+            if not result['Item']['user_status']:
                 logging.info("calling change status to activate")
                 response = change_status(chat_id,True)
                 logging.info(f'change status response {response}')
@@ -132,7 +132,7 @@ def change_status(chat_id,status):
             Key={
             'chatid': str(chat_id)
             },
-            UpdateExpression='SET status = :newstatus',
+            UpdateExpression='SET user_status = :newstatus',
             ExpressionAttributeValues={
             ':newstatus': status
             }
