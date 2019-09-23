@@ -13,12 +13,8 @@ db = boto3.resource('dynamodb')
 table_memes = db.Table('Memes')
 
 def lambda_handler(event,context):
-    try:
-        memes = get_reddit_memes()
-        store_memes(memes,'default')
-    except:
-        logger.info("opps, something bad happened")
-        raise
+    memes = get_reddit_memes()
+    store_memes(memes,'default')
 
 def get_reddit_memes():
     clientid = os.environ['client_id']
@@ -42,7 +38,7 @@ def get_subreddit_posts(subr,memes,reddit):
     max_score = 0 
     best_submission = None
     for submission in reddit.subreddit(subr).hot(limit=5):
-        if submission.url.find("i.redd.it")==-1 or submission.over_18 is True:
+        if submission.url.find("i.redd.it")==-1 or submission.over_18 is True or not submission.author:
             continue
         if submission.score>max_score:
             max_score = submission.score

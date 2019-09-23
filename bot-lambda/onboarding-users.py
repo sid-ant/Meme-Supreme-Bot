@@ -36,7 +36,7 @@ def lambda_handler(event, context):
     logger.info(f"#Event Body {event['body']} ")
     body = event['body']
     body = json.loads(body)
-    
+
     try:
         process(body["message"])
     except:
@@ -132,9 +132,10 @@ def change_status(chat_id,status):
             Key={
             'chatid': str(chat_id)
             },
-            UpdateExpression='SET user_status = :newstatus',
+            UpdateExpression='SET user_status = :newstatus,updation_time = :now',
             ExpressionAttributeValues={
-            ':newstatus': status
+            ':newstatus': status, 
+            ':now': now
             }
         )
         return True
@@ -176,7 +177,7 @@ def get_memes():
     today = date.today()
     current_day = today.strftime("%d/%m/%Y")
     memes_table = dynamodb.Table('Memes')
-    results = memes_table.query(Select="SPECIFIC_ATTRIBUTES",ScanIndexForward=True,KeyConditionExpression=Key("Meme_ID").eq(current_day),FilterExpression=Attr('Category').eq('default'),ProjectionExpression="Author,ContentUrl,PostUrl,Caption,Category",Limit=5)
+    results = memes_table.query(Select="SPECIFIC_ATTRIBUTES",ScanIndexForward=False,KeyConditionExpression=Key("Meme_ID").eq(current_day),FilterExpression=Attr('Category').eq('TOP'),ProjectionExpression="Author,ContentUrl,PostUrl,Caption,Category",Limit=5)
     memes = results['Items']
     if len(memes)==0:
         raise Exception('DB returned no results')
