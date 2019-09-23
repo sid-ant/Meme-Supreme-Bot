@@ -85,32 +85,3 @@ def store_memes(memes,category):
             logger.error(f"Error while inserting into table Memes {e.response['Error']['Message']}")
     return
 
-# query database
-# def get_chats():
-#     try:
-#         subsribers = []
-#         chats = table.scan(AttributesToGet=['chatid'])
-#         logger.info(f"chats type xx is {type(chats)} and value is {chats}")
-#         for items in chats['Items']:
-#             chat_id = items['chatid']
-#             subsribers.append(chat_id)
-#         logger.info(f"all subs are {subsribers}")
-#         return subsribers
-#     except:
-#         logger.info("couldn't query db to get chats")
-#     return None
-
-
-# make async calls to telegram api 
-# def boys_go_deliver(good_stuff,audience):
-#     accesscode = os.environ['accesscode']
-#     try:
-#         session = FuturesSession()
-#         url = f"https://api.telegram.org/bot{accesscode}/sendPhoto"
-#         logger.info(f"url formed is {url}")
-#         for chat_id in audience:
-#             for stuff in good_stuff:
-#                 response = session.post(url, data={'chat_id':chat_id,'photo':stuff})
-#         logger.info(f"Successfully sent message! {good_stuff}")
-#     except:
-#         logger.error(f"Couldn't send reply")
