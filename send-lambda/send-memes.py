@@ -25,7 +25,7 @@ def send_photo(chat_id,memes):
         "media":InputMediaJson
     }
 
-    logging.info("Constructed Request is f'{body}")
+    logging.info(f"Constructed Request is {body}")
     response = requests.post(url, data=body)
     logging.info(f"Response f{response}")
     json_response = response.json()
@@ -55,6 +55,7 @@ def send_error(chat_id):
     
 
 def lambda_handler(event, context):
+    logger.info(f"Send Memes Recived Event as {event}")
     chat_id = event["chat_id"]
     memes = event["memes"]
     send_photo(chat_id,memes)
